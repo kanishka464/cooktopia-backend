@@ -1,0 +1,21 @@
+const recipeService = require('../services/recipeService');
+const { ApiResponse } = require('../utils/apiResponse');
+const asyncHandler = require('../utils/asyncHandler');
+
+exports.getAllRecipe = asyncHandler(async (req, res) => {
+    const recipes = await recipeService.getAllRecipe();
+    return ApiResponse.success(res, 200, recipes, 'Recipes Retrived Successfully');
+});
+
+exports.insertRecipe = asyncHandler(async (req, res) => {
+    const recipe = await recipeService.insertRecipe(req.body);
+    return ApiResponse.success(res, 200, recipe, "Recipe entered successfully");
+});
+
+exports.likeRecipe = asyncHandler(async (req, res) => {
+    const response = await recipeService.likeRecipe(req.body);
+    if(response.success)
+        return ApiResponse.success(res, 200, response.flag, response.message);
+    else 
+        return ApiResponse.error(res, 500, response.message);
+})

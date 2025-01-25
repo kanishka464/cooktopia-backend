@@ -9,7 +9,6 @@ exports.login = asyncHandler(async (req, res) => {
 
     const { success, data } = result;
 
-    console.log(success, data);
     if(success) {
         return ApiResponse.success(
             res,
