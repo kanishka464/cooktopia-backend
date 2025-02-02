@@ -105,6 +105,31 @@ class RecipeService {
             throw error;
         }
     }
+
+    async getRecipeDetailsById(recipe_id) {
+        try {
+            const recipe_ObjectId = new mongoose.Types.ObjectId(recipe_id);
+            const recipeDetails = await Recipe.findById(recipe_ObjectId)
+                                    .select('-likedByUser -__v')
+                                    .populate('created_by', 'name, -_id')
+                                    .populate({
+                                        path: 'comments',
+                                        select: 'commentText created_at -_id',
+                                        populate: { path: 'commentedBy', select: 'name -_id'}
+                                    }).exec();
+
+            console.log('Recipe Details', recipeDetails);
+            if(recipeDetails) {
+                return { success: true, data: recipeDetails, message: "Recipe details fetched successfully"};
+            } else {
+                return { success: false, message: "Recipe details not found" };
+            }
+
+        } catch (error) {
+            console.error('Error while fetching recipe details', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = new RecipeService();
