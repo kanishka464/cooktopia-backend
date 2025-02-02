@@ -1,4 +1,5 @@
 const Recipe = require('../models/recipeModel');
+const Comment = require('../models/commentModel');
 const mongoose = require('mongoose');
 
 class RecipeService {
@@ -53,6 +54,54 @@ class RecipeService {
             }
         } catch (error) {
             console.error('Error while like a recipe', error);
+            throw error;
+        }
+    }
+
+    async commentRecipe(data) {
+        try {
+            const { user_id, recipe_id, commentText } = data;
+            const recipe_ObjectId = new mongoose.Types.ObjectId(recipe_id);
+            const user_ObjectId = new mongoose.Types.ObjectId(user_id);
+
+            const recipeToComment = await Recipe.findById(recipe_ObjectId);
+            console.log("recipe_id",recipe_id, recipe_ObjectId)
+            console.log("recipeToComment: ", recipeToComment);
+
+            if(!recipeToComment) {
+                return { success: false, message: "Recipe not found" };
+            }
+
+            const newComment = {
+                commentText,
+                commentedBy: user_ObjectId,
+                commentedOn: recipe_ObjectId,
+            }
+
+            const comment = new Comment(newComment);
+            const savedComment = await comment.save();
+            console.log("Comment created: ", savedComment);
+            recipeToComment.comments.push(comment._id);
+            await recipeToComment.save();
+            return { success: true, data:comment, message: "Comment added successfully" };
+        } catch (error) {
+            console.error('Error while commenting on a recipe', error);
+            throw error;
+        }
+    }
+
+    async getCommentByRecipeId(recipe_id) {
+        try {
+            const recipe_ObjectId = new mongoose.Types.ObjectId(recipe_id);
+            const comments = await Comment.find({commentedOn: recipe_ObjectId}).populate('commentedBy', 'name');
+            const filteredComments = comments.map(({ commentText, created_at, commentedBy }) => ({
+                commentText,
+                created_at,
+                commentedBy: commentedBy.name
+            }));
+            return { success: true, data: filteredComments, message: "Comments fetched successfully" };
+        } catch (error) {
+            console.error('Error while fetching comments', error);
             throw error;
         }
     }

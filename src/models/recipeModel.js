@@ -44,9 +44,9 @@ const recipeSchema = new mongoose.Schema({
         ref: 'User',
         default: [],
     },
-    commented_by: {
+    comments: {
         type: [mongoose.Schema.Types.ObjectId],
-        ref: 'User',
+        ref: 'Comment',
         // unique: true,
         default: [],
         required:false,
