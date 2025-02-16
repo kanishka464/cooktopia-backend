@@ -118,9 +118,19 @@ class RecipeService {
                                         populate: { path: 'commentedBy', select: 'name -_id'}
                                     }).exec();
 
-            console.log('Recipe Details', recipeDetails);
             if(recipeDetails) {
-                return { success: true, data: recipeDetails, message: "Recipe details fetched successfully"};
+                const recipeDetailsObject = recipeDetails.toObject();
+
+                const updatedDetails = await Recipe.find({
+                    $or: [ 
+                        {category: recipeDetails?.category}, 
+                        {cuisines: recipeDetails?.cuisines}, 
+                        {mealType: recipeDetails?.mealType}
+                    ], _id: {$ne: recipe_ObjectId}
+                }).limit(4).exec();
+
+                recipeDetailsObject.similarRecipes = updatedDetails || [];
+                return { success: true, data: recipeDetailsObject, message: "Recipe details fetched successfully"};
             } else {
                 return { success: false, message: "Recipe details not found" };
             }
