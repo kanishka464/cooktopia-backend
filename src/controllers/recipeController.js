@@ -43,4 +43,12 @@ exports.getRecipeDetailsById = asyncHandler(async (req, res) => {
         return ApiResponse.success(res, 200, response.data, response.message);
     else
         return ApiResponse.error(res, 500, response.message);
+});
+
+exports.uploadRecipeImage = asyncHandler(async (req, res) => {
+    const response = await recipeService.uploadRecipeImage(req);
+    if(response.success)
+        return ApiResponse.success(res, 200, response.data, response.message);
+    else 
+        return ApiResponse.error(res, 500, response.message);
 })

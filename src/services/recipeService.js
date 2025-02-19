@@ -1,6 +1,10 @@
 const Recipe = require('../models/recipeModel');
 const Comment = require('../models/commentModel');
 const mongoose = require('mongoose');
+const S3Client = require('@aws-sdk/client-s3').S3Client;
+const PutObjectCommand = require('@aws-sdk/client-s3').PutObjectCommand;
+const crypto = require('crypto');
+const path = require('path');
 
 class RecipeService {
     async getAllRecipe(filter = {}) {
@@ -137,6 +141,47 @@ class RecipeService {
 
         } catch (error) {
             console.error('Error while fetching recipe details', error);
+            throw error;
+        }
+    }
+
+    async uploadRecipeImage(req) {
+        try {
+            if(!req.file) {
+                return { success: false, message: "No file uploaded" };
+            }
+            
+            
+            const s3Client = new S3Client({
+                region: process.env.AWS_REGION,
+                credentials: {
+                  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+                  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+                },
+              });
+
+            // Generate unique filename
+            const fileExtension = path.extname(req.file.originalname);
+            const fileName = `${crypto.randomBytes(16).toString('hex')}${fileExtension}`;
+
+
+            // Set up S3 upload parameters
+            const uploadParams = {
+                Bucket: process.env.AWS_BUCKET_NAME,
+                Key: `uploads/${fileName}`,
+                Body: req.file.buffer,
+                ContentType: req.file.mimetype,
+            };
+
+            // Upload to S3
+            await s3Client.send(new PutObjectCommand(uploadParams));
+
+            // Generate the URL of the uploaded file
+            const fileUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/uploads/${fileName}`;
+
+            return { success: true, data: fileUrl, message: "Recipe image uploaded successfully" };
+        } catch (error) {
+            console.error('Error uploading recipe image:', error);
             throw error;
         }
     }
