@@ -18,6 +18,24 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user'
+    },
+    followers: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref:'User'
+    }],
+    following: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref:'User',
+    }],
+    profile: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: false,
+      ref:'UserProfile'
+    },
     createdAt: {
         type: Date,
         default: Date.now
