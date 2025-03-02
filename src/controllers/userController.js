@@ -12,3 +12,19 @@ exports.insertOneUser = asyncHandler(async (req, res) => {
     const savedUser = await userService.insertUser(req.body);
     return ApiResponse.success(res, 200, savedUser, "user saved successfully");
 })
+
+exports.followUser = asyncHandler(async (req, res) => {
+    const response = await userService.followUser(req);
+    if(response?.success)
+        return ApiResponse.success(res, 200, response.data, response.message);
+    else
+        return ApiResponse.error(res, 500, response.message);
+})
+
+exports.unfollowUser = asyncHandler(async (req, res) => {
+    const response = await userService.unfollowUser(req);
+    if(response?.success)
+        return ApiResponse.success(res, 200, response.data, response.message);
+    else
+        return ApiResponse.error(res, 500, response.message);
+})
