@@ -10,4 +10,7 @@ router.post('/add', userController.insertOneUser);
 router.post('/follow/:id', authMiddleware ,userController.followUser);
 router.post('/unfollow/:id', authMiddleware, userController.unfollowUser);
 
+// USER PROFILE ROUTES
+router.get('/profile', authMiddleware, userController.getUserProfileDetails);
+
 module.exports = router;

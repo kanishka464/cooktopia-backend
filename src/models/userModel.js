@@ -31,6 +31,14 @@ const userSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref:'User',
     }],
+    createdRecipes: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Recipe'
+    }],
+    likedRecipes: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Recipe'
+    }],
     profile: {
       type: mongoose.Schema.Types.ObjectId,
       required: false,

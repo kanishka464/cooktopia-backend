@@ -86,6 +86,43 @@ class UserService {
             return { success: false, message: "An issue while unfollowing user" };
         }
     }
+
+    async getUserProfileDetails(userData) {
+        try {
+            console.log("user profile data", userData, userData?.user?.userId);
+            const userDetails = await User.findById(userData?.user?.userId)
+                                        .populate({
+                                            path: 'likedRecipes',
+                                            select: '-steps -likedByUser -comments',
+                                            populate: {
+                                                path: 'created_by',
+                                                select: 'name'
+                                            }
+                                        })
+                                        .populate({
+                                            path: 'followers',
+                                            select: 'name'
+                                        })
+                                        .populate({
+                                            path: 'following',
+                                            select: 'name'
+                                        })
+                                        .populate({
+                                            path: 'createdRecipes',
+                                            select: '-steps -likedByUser -comments',
+                                        })
+                                        .exec();
+
+            if(userDetails) {
+                return { success: true, data: userDetails, message: "User profile details fetched successfully" };
+            } else {
+                return { success: false, message: "User details not found" };
+            }
+        } catch (error) {
+            console.log(error);
+            return { success: false, message: "An issue while fetching user profile details" };
+        }
+    }
 }
 
 module.exports =  new UserService();

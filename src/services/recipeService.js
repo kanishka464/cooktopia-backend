@@ -1,4 +1,5 @@
 const Recipe = require('../models/recipeModel');
+const User = require('../models/userModel');
 const Comment = require('../models/commentModel');
 const mongoose = require('mongoose');
 const S3Client = require('@aws-sdk/client-s3').S3Client;
@@ -21,6 +22,9 @@ class RecipeService {
             recipeData.created_by = new mongoose.Types.ObjectId(recipeData.created_by);
             const newRecipe = new Recipe(recipeData);
             const savedRecipe = await newRecipe.save();
+            const user = await User.findById(recipeData.created_by);
+            user.createdRecipes.push(savedRecipe._id);
+            await user.save();
             return savedRecipe;
         } catch (error) {
             console.error('Error inserting user:', error);
@@ -34,25 +38,43 @@ class RecipeService {
             // const recipe_ObjectId = new mongoose.Types.ObjectId(recipe_id);
 
             const recipeToLiked = await Recipe.findById(data?.recipe_id);
+            const userToLikedRecipe = await User.findById(data?.user_id);
 
             if(!recipeToLiked) {
                 return { success:false, message: "Recipe not found" };
             }
 
-            const isUserAlreadyLiked = recipeToLiked.likedByUser.includes(data?.user_id);
+            const isUserAlreadyLiked = userToLikedRecipe.likedRecipes.includes(data?.recipe_id);
 
             if(isUserAlreadyLiked) {
-                recipeToLiked.likedByUser = recipeToLiked.likedByUser.filter(user => !user.equals(data?.user_id));
-                await recipeToLiked.save();
+                try {
+                    recipeToLiked.likedByUser = recipeToLiked.likedByUser.filter(user => !user.equals(data?.user_id));
+                    await recipeToLiked.save();
 
-                return { success: true, message: "Recipe removed from liked recipe", flag: false };
+                    userToLikedRecipe.likedRecipes = userToLikedRecipe.likedRecipes.filter(recipe => !recipe.equals(data?.recipe_id));
+                    await userToLikedRecipe.save();
+
+                    return { success: true, message: "Recipe removed from liked recipe", flag: false };
+                } catch (error) {
+                    console.error('Error while unlike a recipe', error);
+                    return { success: false, message: "An issue while unlike recipe" };
+                }
+                
             } else {
-                recipeToLiked.likedByUser.push(data?.user_id);
-                const response = await recipeToLiked.save();
+                try {
+                    recipeToLiked.likedByUser.push(data?.user_id);
+                    const response = await recipeToLiked.save();
 
-                if(response) {
-                    return { success: true, message: "Recipe liked successfully", flag: true };
-                } else {
+                    userToLikedRecipe.likedRecipes.push(data?.recipe_id);
+                    const saveLikedRecipeToUser = await userToLikedRecipe.save();
+
+                    if(response && saveLikedRecipeToUser) {
+                        return { success: true, message: "Recipe liked successfully", flag: true };
+                    } else {
+                        return { success: false, message: "An issue while like recipe" };
+                    }
+                } catch (error) {
+                    console.error('Error while like a recipe', error);
                     return { success: false, message: "An issue while like recipe" };
                 }
             }
