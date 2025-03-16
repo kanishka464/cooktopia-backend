@@ -56,6 +56,12 @@ const recipeSchema = new mongoose.Schema({
         default: [],
         required:false,
     },
+    rating: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref: 'Rating',
+        default: [],
+        required: false,
+    },
     steps:{
         type: [String],
         required:true,

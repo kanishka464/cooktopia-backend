@@ -6,11 +6,19 @@ const S3Client = require('@aws-sdk/client-s3').S3Client;
 const PutObjectCommand = require('@aws-sdk/client-s3').PutObjectCommand;
 const crypto = require('crypto');
 const path = require('path');
+const Rating = require('../models/recipeRatingModel');
 
 class RecipeService {
     async getAllRecipe(filter = {}) {
         try {
-            const recipes = await Recipe.find(filter).populate('created_by', 'name').sort({createdAt: -1});
+            const recipes = await Recipe.find(filter)
+                                    .populate('created_by', 'name')
+                                    .populate({
+                                        path:'rating',
+                                        select: 'rating -_id'
+                                    })
+                                    .sort({createdAt: -1})
+                                    .exec();
             return recipes;
         } catch (err) {
             throw new Error(`Error fetching recipes: ${err.message}`);
@@ -142,7 +150,12 @@ class RecipeService {
                                         path: 'comments',
                                         select: 'commentText created_at -_id',
                                         populate: { path: 'commentedBy', select: 'name -_id'}
-                                    }).exec();
+                                    })
+                                    .populate({
+                                        path:'rating',
+                                        select: 'rating -_id'
+                                    })
+                                    .exec();
 
             if(recipeDetails) {
                 const recipeDetailsObject = recipeDetails.toObject();
@@ -204,6 +217,38 @@ class RecipeService {
             return { success: true, data: fileUrl, message: "Recipe image uploaded successfully" };
         } catch (error) {
             console.error('Error uploading recipe image:', error);
+            throw error;
+        }
+    }
+
+    async rateRecipe(data) {
+        try {
+            const { user_id, recipe_id, rating } = data;
+            const recipe_ObjectId = new mongoose.Types.ObjectId(recipe_id);
+            const user_ObjectId = new mongoose.Types.ObjectId(user_id);
+
+            const recipeToRate = await Recipe.findById(recipe_ObjectId);
+            console.log("recipe_id",recipe_id, recipe_ObjectId)
+            console.log("recipeToRate: ", recipeToRate);
+
+            if(!recipeToRate) {
+                return { success: false, message: "Recipe not found" };
+            }
+
+            const newRating = {
+                rating,
+                ratedBy: user_ObjectId,
+                ratedOn: recipe_ObjectId,
+            }
+
+            const ratingData = new Rating(newRating);
+            const savedRating = await ratingData.save();
+            console.log("Rating created: ", savedRating);
+            recipeToRate.rating.push(ratingData._id);
+            await recipeToRate.save();
+            return { success: true, data:ratingData, message: "Recipe rated successfully" };
+        } catch (error) {
+            console.error('Error while rating the recipe', error);
             throw error;
         }
     }

@@ -89,7 +89,6 @@ class UserService {
 
     async getUserProfileDetails(userData) {
         try {
-            console.log("user profile data", userData, userData?.user?.userId);
             const userDetails = await User.findById(userData?.user?.userId)
                                         .populate({
                                             path: 'likedRecipes',
@@ -109,7 +108,7 @@ class UserService {
                                         })
                                         .populate({
                                             path: 'createdRecipes',
-                                            select: '-steps -likedByUser -comments',
+                                            select: '-steps',
                                         })
                                         .exec();
 

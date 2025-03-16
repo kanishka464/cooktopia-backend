@@ -52,3 +52,11 @@ exports.uploadRecipeImage = asyncHandler(async (req, res) => {
     else 
         return ApiResponse.error(res, 500, response.message);
 })
+
+exports.rateRecipe = asyncHandler(async (req, res) => {
+    const response = await recipeService.rateRecipe(req.body);
+    if(response.success)
+        return ApiResponse.success(res, 200, response.data, response.message);
+    else
+        return ApiResponse.error(res, 500, response.message);
+})

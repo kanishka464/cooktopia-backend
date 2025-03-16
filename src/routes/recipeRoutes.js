@@ -26,5 +26,6 @@ router.post('/comment-recipe', recipeController.commentRecipe);
 router.get('/get-comment-by-recipeId', recipeController.getCommentByRecipeId);
 router.get('/get-recipe-details', recipeController.getRecipeDetailsById);
 router.post('/upload-recipe-image', upload.single("image"), recipeController.uploadRecipeImage);
+router.post('/rate-recipe', recipeController.rateRecipe);
 
 module.exports = router;
