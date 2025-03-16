@@ -144,7 +144,6 @@ class RecipeService {
         try {
             const recipe_ObjectId = new mongoose.Types.ObjectId(recipe_id);
             const recipeDetails = await Recipe.findById(recipe_ObjectId)
-                                    .select('-likedByUser -__v')
                                     .populate('created_by', 'name, -_id')
                                     .populate({
                                         path: 'comments',
@@ -153,7 +152,8 @@ class RecipeService {
                                     })
                                     .populate({
                                         path:'rating',
-                                        select: 'rating -_id'
+                                        select: 'rating -_id',
+                                        populate: { path: 'ratedBy', select: '_id'}
                                     })
                                     .exec();
 
