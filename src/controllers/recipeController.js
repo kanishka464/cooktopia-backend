@@ -3,7 +3,7 @@ const { ApiResponse } = require('../utils/apiResponse');
 const asyncHandler = require('../utils/asyncHandler');
 
 exports.getAllRecipe = asyncHandler(async (req, res) => {
-    const recipes = await recipeService.getAllRecipe();
+    const recipes = await recipeService.getAllRecipe(req.query);
     return ApiResponse.success(res, 200, recipes, 'Recipes Retrived Successfully');
 });
 
@@ -58,5 +58,13 @@ exports.rateRecipe = asyncHandler(async (req, res) => {
     if(response.success)
         return ApiResponse.success(res, 200, response.data, response.message);
     else
+        return ApiResponse.error(res, 500, response.message);
+})
+
+exports.searchRecipe = asyncHandler(async (req, res) => {
+    const response = await recipeService.searchRecipe(req.query);
+    if(response.success)
+        return ApiResponse.success(res, 200, response.data, response.message);
+    else 
         return ApiResponse.error(res, 500, response.message);
 })

@@ -7,7 +7,6 @@ const PutObjectCommand = require('@aws-sdk/client-s3').PutObjectCommand;
 const crypto = require('crypto');
 const path = require('path');
 const Rating = require('../models/recipeRatingModel');
-
 class RecipeService {
     async getAllRecipe(filter = {}) {
         try {
@@ -249,6 +248,36 @@ class RecipeService {
             return { success: true, data:ratingData, message: "Recipe rated successfully" };
         } catch (error) {
             console.error('Error while rating the recipe', error);
+            throw error;
+        }
+    }
+
+    async searchRecipe(searchQuery) {
+        try {
+            console.log("Search Query", searchQuery);
+            const { query } = searchQuery;
+
+            if (!query) return { success: false, message: 'Query required' };
+
+            const searchRegex = new RegExp(query, "i");
+
+            const results = await Recipe.find({
+                $or: [
+                    { recipeName: searchRegex },
+                    { cuisines: searchRegex },
+                    { mealType: searchRegex },
+                    { category: searchRegex }
+                ]
+            });
+
+            console.log("Search Results", results);
+            if(results) {
+                return { success: true, data: results, message: 'Searched Recipes'}
+            } else {
+                return { success: false, message: 'Failed to fetch recipes' };
+            }
+        } catch (error)  {
+            console.error(`Error while search`, error);
             throw error;
         }
     }
