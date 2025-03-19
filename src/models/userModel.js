@@ -39,6 +39,11 @@ const userSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Recipe'
     }],
+    picture: {
+      type: String,
+      required: false,
+      trim: true,
+    },
     profile: {
       type: mongoose.Schema.Types.ObjectId,
       required: false,

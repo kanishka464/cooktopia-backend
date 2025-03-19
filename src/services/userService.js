@@ -2,7 +2,8 @@ const User = require('../models/userModel');
 const mongoose = require('mongoose');
 const Comment = require('../models/commentModel');
 const Recipe = require('../models/recipeModel');
-
+const userAvatar = require('../utils/constants');
+const type = require('../utils/constants');
 class UserService {
     // Get all users
     async getUsers(filter = {}) {
@@ -18,11 +19,12 @@ class UserService {
     async insertUser(userData) {
         try {
             // Create new user instance
+            const picture = `https://api.dicebear.com/9.x/${type[Math.floor(Math.random()*type.length)]}/svg?seed=${userAvatar[Math.floor(Math.random()*userAvatar.length)]}&radius=50&backgroundColor=65c9ff,b6e3f4,ffdfbf,ffd5dc,d1d4f9,c0aede&backgroundType=gradientLinear,solid`
             const newUser = new User({
                 name: userData.name,
                 email: userData.email,
                 password:userData.password,
-                // Add any other fields your schema requires
+                picture: picture,
             });
     
             // Save to database
@@ -204,6 +206,21 @@ class UserService {
     } catch (error) {
             console.log(error);
             return { success: false, message: 'An issue while getting recent Activities' };
+        }
+    }
+
+    async updateProfilePicture(data) {
+        try {
+            const { type, avtaar} = data?.body;
+
+            const user = await User.findById(data?.user?.userId);
+            user.picture = `https://api.dicebear.com/9.x/${type}/svg?seed=${avtaar}&radius=50&backgroundColor=65c9ff,b6e3f4,ffdfbf,ffd5dc,d1d4f9,c0aede&backgroundType=gradientLinear,solid`
+            const updatedUser = await user.save();
+            console.log("Updated User", updatedUser);
+            return { success: true, data: updatedUser.picture, message: "" };
+        } catch (error) {
+            console.log(error);
+            return { success: false, message: "Error occurred while updating profile picture" };
         }
     }
 }

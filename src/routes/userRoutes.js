@@ -12,7 +12,9 @@ router.post('/unfollow/:id', authMiddleware, userController.unfollowUser);
 
 // USER PROFILE ROUTES
 router.get('/profile', authMiddleware, userController.getUserProfileDetails);
-
 router.get('/recent-activity', userController.getRecentActivity);
+
+// UPDATE USER IMAGE
+router.post('/update-profile-picture', authMiddleware, userController.updateProfilePicture);
 
 module.exports = router;
