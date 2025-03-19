@@ -68,3 +68,11 @@ exports.searchRecipe = asyncHandler(async (req, res) => {
     else 
         return ApiResponse.error(res, 500, response.message);
 })
+
+exports.getTrendingRecipes = asyncHandler(async (req, res) => {
+    const response = await recipeService.getTrendingRecipes(req);
+    if(response.success)
+        return ApiResponse.success(res, 200, response.data, response.message);
+    else
+        return ApiResponse.error(res, 500, response.message);
+})

@@ -36,3 +36,11 @@ exports.getUserProfileDetails = asyncHandler(async (req, res) => {
     else
         return ApiResponse.error(res, 500, response.message);
 })
+
+exports.getRecentActivity = asyncHandler(async (req, res) => {
+    const response = await userService.getRecentActivity(req);
+    if(response?.success)
+        return ApiResponse.success(res, 200, response.data, response.message);
+    else
+        return ApiResponse.error(res, 500, response.message);
+})

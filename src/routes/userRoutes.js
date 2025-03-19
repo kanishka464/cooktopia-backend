@@ -13,4 +13,6 @@ router.post('/unfollow/:id', authMiddleware, userController.unfollowUser);
 // USER PROFILE ROUTES
 router.get('/profile', authMiddleware, userController.getUserProfileDetails);
 
+router.get('/recent-activity', userController.getRecentActivity);
+
 module.exports = router;

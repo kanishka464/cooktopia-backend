@@ -281,6 +281,47 @@ class RecipeService {
             throw error;
         }
     }
+
+    async getTrendingRecipes(req) {
+        const { userId } = req.query;
+
+        try {
+            const topRecipes = await Recipe.aggregate([
+                { $match: { created_by: new mongoose.Types.ObjectId(userId) } }, // Filter by user
+                {
+                    $lookup: {
+                        from: "recipeRatings", // Assuming 'ratings' collection stores rating documents
+                        localField: "rating",
+                        foreignField: "_id",
+                        as: "ratingDetails",
+                    }
+                },
+                {
+                    $addFields: {
+                        likesCount: { $size: "$likedByUser" }, // Count of likes
+                        averageRating: {
+                            $cond: {
+                                if: { $gt: [{ $size: "$ratingDetails" }, 0] }, // Check if ratings exist
+                                then: { $avg: "$ratingDetails.rating" }, // Calculate average rating
+                                else: 0
+                            }
+                        }
+                    }
+                },
+                { $sort: { likesCount: -1, averageRating: -1 } }, // Sort by likes & ratings
+                { $limit: 3 } // Get top 3 recipes
+            ]);
+    
+           if(topRecipes) {
+                return { success: true, data: topRecipes, message: 'Top REcipes fetched successfully' };
+           } else {
+                return { success: false, message: 'No Recipes Found' }
+           }
+        } catch (error) {
+            console.error("Error fetching top trending recipes:", error);
+            return [];
+        }
+    }
 }
 
 module.exports = new RecipeService();

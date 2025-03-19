@@ -28,5 +28,6 @@ router.get('/get-recipe-details', recipeController.getRecipeDetailsById);
 router.post('/upload-recipe-image', upload.single("image"), recipeController.uploadRecipeImage);
 router.post('/rate-recipe', recipeController.rateRecipe);
 router.get('/recipe-search', recipeController.searchRecipe);
+router.get('/trending-recipes', recipeController.getTrendingRecipes);
 
 module.exports = router;

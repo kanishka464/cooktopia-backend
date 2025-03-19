@@ -1,4 +1,7 @@
 const User = require('../models/userModel');
+const mongoose = require('mongoose');
+const Comment = require('../models/commentModel');
+const Recipe = require('../models/recipeModel');
 
 class UserService {
     // Get all users
@@ -120,6 +123,87 @@ class UserService {
         } catch (error) {
             console.log(error);
             return { success: false, message: "An issue while fetching user profile details" };
+        }
+    }
+
+    async getRecentActivity(data) {
+        const { userId } = data.query;
+        try {
+            const userObjectId = new mongoose.Types.ObjectId(userId);
+
+            // Fetch user-created recipes
+            const userRecipes = await Recipe.find({ created_by: userObjectId }).select("_id recipeName");
+    
+            const recipeIds = userRecipes.map(recipe => recipe._id);
+    
+            // Fetch recent comments on user's recipes
+            const recentComments = await Comment.find({ commentedOn: { $in: recipeIds } })
+                .populate("commentedBy", "name")
+                .populate("commentedOn", "recipeName")
+                .sort({ created_at: -1 })
+                .limit(5);
+    
+            // Fetch recent likes on user's recipes
+            const recentLikes = await User.find({ likedRecipes: { $in: recipeIds } })
+                .select("name likedRecipes")
+                .populate({
+                    path: "likedRecipes",
+                    match: { _id: { $in: recipeIds } },
+                    select: "recipeName created_at"
+                })
+                .sort({ createdAt: -1 })
+                .limit(5);
+    
+            // Fetch recent followers
+            const recentFollowers = await User.find({ following: userObjectId })
+                .select("name createdAt")
+                .sort({ createdAt: -1 })
+                .limit(5);
+    
+            // Format activities
+            const activities = [];
+    
+            // Add comment activities
+            recentComments.forEach(comment => {
+                activities.push({
+                    type: "comment",
+                    message: `${comment.commentedBy.name} commented on your recipe ${comment.commentedOn.recipeName}`,
+                    date: comment.created_at
+                });
+            });
+    
+            // Add like activities
+            recentLikes.forEach(user => {
+                user.likedRecipes.forEach(recipe => {
+                    activities.push({
+                        type: "like",
+                        message: `${user.name} liked your recipe ${recipe.recipeName}`,
+                        date: recipe.created_at
+                    });
+                });
+            });
+    
+            // Add follower activities
+            recentFollowers.forEach(follower => {
+                activities.push({
+                    type: "follow",
+                    message: `${follower.name} started following you`,
+                    date: follower.createdAt
+                });
+            });
+    
+            // Sort by date and return latest 5 activities
+            activities.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            if(activities) {
+                return { success: true, data: activities?.slice(0, 5), message: 'Activities fetched successfully' };
+            } else {
+                return { success: false, message: 'An issue occurred while fetching activities' };
+            }
+
+    } catch (error) {
+            console.log(error);
+            return { success: false, message: 'An issue while getting recent Activities' };
         }
     }
 }
