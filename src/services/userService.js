@@ -38,6 +38,7 @@ class UserService {
 
     async followUser(userData) {
         try {
+            console.log("PARAMS", userData.params);
             const userToFollow = await User.findById(userData?.params?.id);
             const currentUser = await User.findById(userData?.user?.userId);
 
@@ -57,7 +58,7 @@ class UserService {
             await currentUser.save();
             await userToFollow.save();
 
-            return { success: true, data:null, message: "User followed successfully" };
+            return { success: true, data:{}, message: "User followed successfully" };
         } catch (error) {
             console.error('Error while following user', error );
             return { success: false, message: "An issue while following user" };
@@ -66,7 +67,7 @@ class UserService {
 
     async unfollowUser(userData) {
         try {
-            const userToUnfollow = await User.findById(req.params.id);
+            const userToUnfollow = await User.findById(userData?.params.id);
             const currentUser = await User.findById(userData?.user?.userId);
 
             if(!userToUnfollow || !currentUser) {
@@ -93,8 +94,10 @@ class UserService {
     }
 
     async getUserProfileDetails(userData) {
+        const { userId } = userData.query;
+        console.log("User id ----", userId);
         try {
-            const userDetails = await User.findById(userData?.user?.userId)
+            const userDetails = await User.findById(userId ? userId : userData?.user?.userId)
                                         .populate({
                                             path: 'likedRecipes',
                                             select: '-steps -likedByUser -comments',
@@ -105,11 +108,11 @@ class UserService {
                                         })
                                         .populate({
                                             path: 'followers',
-                                            select: 'name'
+                                            select: 'name picture'
                                         })
                                         .populate({
                                             path: 'following',
-                                            select: 'name'
+                                            select: 'name picture'
                                         })
                                         .populate({
                                             path: 'createdRecipes',
@@ -140,14 +143,14 @@ class UserService {
     
             // Fetch recent comments on user's recipes
             const recentComments = await Comment.find({ commentedOn: { $in: recipeIds } })
-                .populate("commentedBy", "name")
+                .populate("commentedBy", "name picture _id")
                 .populate("commentedOn", "recipeName")
                 .sort({ created_at: -1 })
                 .limit(5);
     
             // Fetch recent likes on user's recipes
             const recentLikes = await User.find({ likedRecipes: { $in: recipeIds } })
-                .select("name likedRecipes")
+                .select("name likedRecipes picture _id")
                 .populate({
                     path: "likedRecipes",
                     match: { _id: { $in: recipeIds } },
@@ -158,7 +161,7 @@ class UserService {
     
             // Fetch recent followers
             const recentFollowers = await User.find({ following: userObjectId })
-                .select("name createdAt")
+                .select("name createdAt picture _id")
                 .sort({ createdAt: -1 })
                 .limit(5);
     
@@ -169,6 +172,8 @@ class UserService {
             recentComments.forEach(comment => {
                 activities.push({
                     type: "comment",
+                    picture: comment.commentedBy.picture,
+                    userId: comment.commentedBy._id,
                     message: `${comment.commentedBy.name} commented on your recipe ${comment.commentedOn.recipeName}`,
                     date: comment.created_at
                 });
@@ -179,6 +184,8 @@ class UserService {
                 user.likedRecipes.forEach(recipe => {
                     activities.push({
                         type: "like",
+                        picture: user.picture,
+                        userId: user._id,
                         message: `${user.name} liked your recipe ${recipe.recipeName}`,
                         date: recipe.created_at
                     });
@@ -189,6 +196,8 @@ class UserService {
             recentFollowers.forEach(follower => {
                 activities.push({
                     type: "follow",
+                    picture: follower.picture,
+                    userId: follower._id,
                     message: `${follower.name} started following you`,
                     date: follower.createdAt
                 });

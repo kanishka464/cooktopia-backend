@@ -11,7 +11,7 @@ class RecipeService {
     async getAllRecipe(filter = {}) {
         try {
             const recipes = await Recipe.find(filter)
-                                    .populate('created_by', 'name')
+                                    .populate('created_by', 'name picture')
                                     .populate({
                                         path:'rating',
                                         select: 'rating -_id'

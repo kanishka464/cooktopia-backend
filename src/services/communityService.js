@@ -34,6 +34,16 @@ class CommunityService {
             throw error;
         }
     }
+
+    async getRecentPosts() {
+        try{
+            const posts = await Post.find().populate('postedBy', 'name picture').sort({'created_at' : -1}).exec();
+            return { success: true, data: posts, message: "Posts retrieved successfully" };
+        } catch (error) {
+            console.error('Error while fetching posts', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = new CommunityService();
