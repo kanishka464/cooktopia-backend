@@ -1,4 +1,4 @@
-const communityService = require('../services/communityservice');
+const communityService = require('../services/communityService');
 const { ApiResponse } = require('../utils/apiResponse');
 const asyncHandler = require('../utils/asyncHandler');
 
