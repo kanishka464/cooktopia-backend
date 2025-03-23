@@ -1,4 +1,4 @@
-const Post = require("../models/postmodel");
+const Post = require("../models/postModel");
 const mongoose = require('mongoose');
 
 class CommunityService {
